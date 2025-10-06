@@ -1,0 +1,31 @@
+# Development files
+*.test.js
+test.js
+demo.js
+example.ts
+vitest.config.js
+tsconfig.json
+benchmark.js
+build.js
+
+# Directories
+.github/
+.claude/
+coverage/
+node_modules/
+modules/
+examples/
+
+# Documentation (keep only README, LICENSE, CHANGELOG)
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+MIGRATION.md
+SECURITY.md
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.log
+.DS_Store

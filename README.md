@@ -1,8 +1,10 @@
 # RailJS
 
 [![CI](https://github.com/PxPerfectMike/RailJS/actions/workflows/ci.yml/badge.svg)](https://github.com/PxPerfectMike/RailJS/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/PxPerfectMike/RailJS/branch/main/graph/badge.svg)](https://codecov.io/gh/PxPerfectMike/RailJS)
 [![npm version](https://badge.fury.io/js/@railjs%2Fcore.svg)](https://www.npmjs.com/package/@railjs/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/node/v/@railjs/core.svg)](https://nodejs.org)
 
 A lightweight event bus for building modular JavaScript applications with strict module isolation.
 

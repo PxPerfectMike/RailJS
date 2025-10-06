@@ -2,14 +2,16 @@
 	"name": "@railjs/core",
 	"version": "0.1.0",
 	"description": "A lightweight event bus for building modular JavaScript applications with strict module isolation",
-	"main": "./rail.js",
+	"main": "./dist/rail.cjs.js",
+	"module": "./dist/rail.esm.js",
 	"types": "./rail.d.ts",
 	"type": "module",
 	"exports": {
 		".": {
 			"types": "./rail.d.ts",
-			"import": "./rail.js",
-			"require": "./rail.js"
+			"import": "./dist/rail.esm.js",
+			"require": "./dist/rail.cjs.js",
+			"default": "./dist/rail.esm.js"
 		}
 	},
 	"files": [
@@ -17,7 +19,8 @@
 		"rail.d.ts",
 		"dist",
 		"README.md",
-		"LICENSE"
+		"LICENSE",
+		"CHANGELOG.md"
 	],
 	"scripts": {
 		"test": "vitest run",
@@ -28,7 +31,7 @@
 		"build": "node build.js",
 		"benchmark": "node benchmark.js",
 		"prebuild": "npm run type-check",
-		"prepublishOnly": "npm run build"
+		"prepublishOnly": "npm test && npm run build"
 	},
 	"keywords": [
 		"event-bus",

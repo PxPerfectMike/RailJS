@@ -7,6 +7,7 @@ export class Rail {
 	constructor(options = {}) {
 		this.name = options.name || 'rail-app';
 		this.debug = options.debug || false;
+		this.clone = options.clone !== undefined ? options.clone : true; // Deep clone by default
 		this.listeners = new Map(); // event -> array of {callback, module, id}
 		this.modules = new Map(); // module name -> module instance
 		this.eventHistory = []; // For debugging and replay
@@ -14,6 +15,9 @@ export class Rail {
 
 		if (this.debug) {
 			console.log(`🚂 [${this.name}] Rail started in debug mode`);
+			if (!this.clone) {
+				console.warn(`⚠️  [${this.name}] Deep cloning is DISABLED - modules can contaminate each other's data`);
+			}
 		}
 	}
 
@@ -68,9 +72,10 @@ export class Rail {
 	}
 
 	/**
-	 * Emit an event to all listeners
+	 * Emit an event to all listeners (synchronous)
 	 * @param {string} event - Event name to emit
 	 * @param {any} data - Data to send with the event
+	 * @returns {number} Number of handlers that were called
 	 */
 	emit(event, data = {}) {
 		const timestamp = Date.now();
@@ -87,14 +92,14 @@ export class Rail {
 
 		listeners.forEach(({ callback, module }) => {
 			try {
-				// Deep clone to prevent contamination between modules
-				const clonedData = this._deepClone(data);
+				// Deep clone to prevent contamination between modules (if enabled)
+				const eventData = this.clone ? this._deepClone(data) : data;
 
 				if (this.debug) {
 					console.log(`   ↳ ${module} handling '${event}'`);
 				}
 
-				callback(clonedData);
+				callback(eventData);
 				handledCount++;
 			} catch (error) {
 				console.error(
@@ -103,12 +108,19 @@ export class Rail {
 				);
 
 				// Emit error event for error handling modules
-				this.emit('rail.error', {
+				// Note: Always clone error events to prevent recursion issues
+				const errorData = {
 					module,
 					event,
 					error: error.message,
 					timestamp,
-				});
+				};
+
+				// Temporarily force cloning for error events to avoid infinite loops
+				const originalClone = this.clone;
+				this.clone = true;
+				this.emit('rail.error', errorData);
+				this.clone = originalClone;
 			}
 		});
 
@@ -119,6 +131,70 @@ export class Rail {
 		}
 
 		return handledCount;
+	}
+
+	/**
+	 * Emit an event to all listeners and wait for all async handlers to complete
+	 * @param {string} event - Event name to emit
+	 * @param {any} data - Data to send with the event
+	 * @returns {Promise<Array>} Promise that resolves with array of handler results
+	 */
+	async emitAsync(event, data = {}) {
+		const timestamp = Date.now();
+
+		// Store in history for debugging
+		this.eventHistory.push({ event, data, timestamp });
+
+		if (this.debug) {
+			console.log(`🔥 [${this.name}] Emitting async '${event}':`, data);
+		}
+
+		const listeners = this.listeners.get(event) || [];
+
+		if (this.debug && listeners.length === 0) {
+			console.warn(
+				`⚠️  [${this.name}] No listeners for event '${event}'`
+			);
+		}
+
+		// Map all listeners to promises
+		const promises = listeners.map(async ({ callback, module }) => {
+			try {
+				// Deep clone to prevent contamination between modules (if enabled)
+				const eventData = this.clone ? this._deepClone(data) : data;
+
+				if (this.debug) {
+					console.log(`   ↳ ${module} handling async '${event}'`);
+				}
+
+				const result = await callback(eventData);
+				return { module, result, error: null };
+			} catch (error) {
+				console.error(
+					`❌ [${this.name}] Error in module '${module}' handling async '${event}':`,
+					error
+				);
+
+				// Emit error event for error handling modules
+				const errorData = {
+					module,
+					event,
+					error: error.message,
+					timestamp,
+				};
+
+				// Temporarily force cloning for error events to avoid infinite loops
+				const originalClone = this.clone;
+				this.clone = true;
+				this.emit('rail.error', errorData);
+				this.clone = originalClone;
+
+				return { module, result: null, error: error.message };
+			}
+		});
+
+		// Wait for all handlers to complete
+		return await Promise.all(promises);
 	}
 
 	/**
@@ -310,6 +386,21 @@ export class Rail {
 		this.debug = enabled;
 		if (enabled) {
 			console.log(`🐛 [${this.name}] Debug mode enabled`);
+		}
+	}
+
+	/**
+	 * Enable/disable deep cloning of event data
+	 * WARNING: Disabling cloning improves performance but allows modules to contaminate each other's data
+	 */
+	setClone(enabled) {
+		this.clone = enabled;
+		if (this.debug) {
+			if (enabled) {
+				console.log(`🔒 [${this.name}] Deep cloning enabled - data isolation guaranteed`);
+			} else {
+				console.warn(`⚠️  [${this.name}] Deep cloning DISABLED - modules can contaminate each other's data`);
+			}
 		}
 	}
 

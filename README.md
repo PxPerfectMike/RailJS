@@ -1,46 +1,68 @@
-# RailJS - Event-Driven Architecture for AI Development
+# RailJS
 
-🚂 **Build with modules, not monoliths**
+A lightweight event bus for building modular JavaScript applications with strict module isolation.
 
-RailJS is an event-driven architecture pattern designed specifically for AI-assisted development. It enables developers to build complex applications using completely isolated modules that communicate only through a central event rail.
+RailJS is a simple, well-tested event emitter that helps you build applications using isolated modules that communicate only through events. Perfect for projects where you want clear boundaries between components without the complexity of a full framework.
 
-## ✨ Why RailJS?
+## Features
 
--   **🤖 AI-Optimized**: Each module fits in one AI context window
--   **🔒 True Isolation**: Modules literally cannot import each other
--   **🚀 Zero Contamination**: Clean data flow prevents module interference
--   **🔧 Delete-Safe**: Remove any module without breaking your app
--   **⚡ Transport Agnostic**: Same code works across threads, processes, and networks
+-   **Module Isolation**: Modules communicate exclusively through events, not direct imports
+-   **Data Safety**: Automatic deep cloning prevents unintended side effects between modules
+-   **Simple API**: Familiar event emitter pattern with attach/detach module lifecycle
+-   **Hot-swappable**: Add or remove modules at runtime without restarting
+-   **Universal**: Works in Node.js, Deno, and browsers
+-   **TypeScript Support**: Full type definitions for type-safe development
+-   **Testing-friendly**: Built-in utilities for testing modules in isolation
 
-## 🎯 The Core Concept
+## Core Concept
 
 ```
 Module A ──┐
-Module B ──┼─── RAIL (all events flow here) ───>
+Module B ──┼─── RAIL (central event bus) ───>
 Module C ──┘
 
-- Modules NEVER communicate directly
-- ALL communication goes through the Rail
+- Modules communicate only through events
+- All events flow through the central Rail
 - Modules can be attached/detached at runtime
-- Perfect for AI development (small, isolated contexts)
+- Each module maintains its own state and logic
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Download the Starter Kit
+### Installation
 
 ```bash
-# Option 1: Download directly
-curl -O https://github.com/railjs/starter/archive/main.zip
-unzip main.zip
-cd railjs-starter-main
-
-# Option 2: Clone the repo
-git clone https://github.com/railjs/starter.git
-cd starter
+npm install railjs
+# or
+yarn add railjs
 ```
 
-### 2. Run the Demo
+### TypeScript Support
+
+RailJS includes full TypeScript definitions out of the box:
+
+```typescript
+import { Rail, RailModule, RailOptions } from 'railjs';
+
+interface UserData {
+	email: string;
+	name: string;
+}
+
+const rail = new Rail({ debug: true });
+
+// Type-safe event handlers
+rail.on<UserData>('user.created', (data) => {
+	console.log(data.email); // TypeScript knows data has email property
+});
+
+// Type-safe event emission
+rail.emit<UserData>('user.created', { email: 'user@example.com', name: 'John' });
+```
+
+See `example.ts` for a complete TypeScript usage example.
+
+### Run the Demo
 
 ```bash
 # Node.js
@@ -54,9 +76,9 @@ python -m http.server 8000
 # Then open http://localhost:8000
 ```
 
-### 3. See the Magic
+### Example Output
 
-Watch modules communicate through events:
+Modules communicating through events:
 
 ```
 🚂 [demo-app] Rail started in debug mode
@@ -135,8 +157,13 @@ import { Rail } from './rail.js';
 const rail = new Rail({
 	name: 'my-app', // Optional: Rail name for debugging
 	debug: true, // Optional: Enable debug logging
+	clone: true, // Optional: Deep clone event data (default: true)
 });
 ```
+
+**Performance vs Safety:**
+- `clone: true` (default) - Guarantees data isolation between modules but slower
+- `clone: false` - Better performance but modules can modify shared data
 
 ### Module Pattern
 
@@ -161,14 +188,31 @@ const module = {
 ### Event Communication
 
 ```javascript
-// Emit events
+// Emit events (synchronous)
 rail.emit('user.login', { email: 'user@example.com', password: 'secret' });
+
+// Emit events (asynchronous) - waits for all handlers to complete
+const results = await rail.emitAsync('user.login', {
+	email: 'user@example.com',
+	password: 'secret'
+});
+// results: [{ module: 'auth', result: {...}, error: null }, ...]
 
 // Listen for events
 rail.on(
 	'user.login',
 	(data) => {
 		console.log('Login attempt:', data.email);
+	},
+	'auth-module'
+);
+
+// Listen with async handlers
+rail.on(
+	'user.login',
+	async (data) => {
+		const user = await database.findUser(data.email);
+		return user; // Return value available in emitAsync results
 	},
 	'auth-module'
 );
@@ -308,11 +352,11 @@ rail.emit('chat.join', { roomId: 'general', userId: 1, username: 'Alice' });
 rail.emit('chat.message', { roomId: 'general', userId: 1, message: 'Hello!' });
 ```
 
-## 🔒 Security Features
+## Data Isolation
 
-RailJS provides security by design:
+RailJS automatically clones event data to prevent modules from affecting each other:
 
-### Data Isolation
+### Preventing Side Effects
 
 ```javascript
 const original = { secret: 'password123' };
@@ -328,11 +372,13 @@ console.log(original.secret); // Still 'password123'
 ### Module Isolation
 
 ```javascript
-// This is IMPOSSIBLE in RailJS
-import OtherModule from './other-module'; // ❌ Modules can't import each other
+// ❌ Avoid: Direct module dependencies
+import OtherModule from './other-module';
+OtherModule.getData();
 
-// Modules communicate ONLY through events
-rail.emit('need.data'); // ✅ The RailJS way
+// ✅ Prefer: Event-based communication
+rail.emit('data.request', { type: 'user' });
+rail.on('data.response', (data) => { /* handle data */ });
 ```
 
 ### Error Isolation
@@ -362,10 +408,18 @@ rail.emit('risky.operation'); // Both handlers run, error is contained
 ### Request-Response Pattern
 
 ```javascript
-// Request data
+// Async request-response (recommended)
+rail.on('user.get', async (data) => {
+	const user = await database.findUser(data.userId);
+	return user; // Return the data directly
+}, 'database');
+
+const results = await rail.emitAsync('user.get', { userId: 123 });
+const user = results[0].result; // Get result from first handler
+
+// Traditional event-based request-response
 rail.emit('user.get', { userId: 123 });
 
-// Respond with data
 rail.on(
 	'user.get',
 	(data) => {
@@ -537,39 +591,16 @@ Use clear, consistent event names:
 'handleUserLogin'; // sounds like function name
 ```
 
-## 🤖 AI Development Tips
+## Use Cases
 
-RailJS is optimized for AI assistants:
+RailJS works well for:
 
-1. **One Module = One Context**: Each module fits in AI memory
-2. **Clear Contracts**: Events define exact inputs/outputs
-3. **No Hidden Dependencies**: AI can see all connections
-4. **Easy Testing**: AI can test modules in isolation
-5. **Simple Patterns**: Consistent structure across all modules
-
-### AI Prompt Template
-
-```
-You are building RailJS modules. Critical rules:
-1. Modules CANNOT import other modules
-2. Modules communicate ONLY via rail.emit() and rail.on()
-3. Each module does ONE thing well
-4. Use this exact template:
-
-export const myModule = {
-  name: 'module-name',
-  connect(rail) {
-    rail.on('input.event', (data) => {
-      // Process data
-      rail.emit('output.event', result);
-    }, 'module-name');
-  }
-};
-
-Module must handle: [describe what this module should do]
-Listen for: [list input events]
-Emit: [list output events]
-```
+- **Modular applications** where you want clear component boundaries
+- **Plugin systems** that need to add/remove functionality at runtime
+- **Microservices coordination** within a single process
+- **Testing** complex systems by swapping modules with mocks
+- **Event sourcing** architectures
+- **AI-assisted development** where isolated contexts help language models understand code
 
 ## 🐛 Troubleshooting
 
@@ -622,22 +653,42 @@ rail.on('event', handler, 'my-module');
 -   Run `node test.js` to verify core functionality
 -   Look at example modules for patterns
 
-## 📜 License
+## Performance Considerations
 
-MIT License - feel free to use RailJS in your projects!
+RailJS deep-clones all event data by default to ensure module isolation. For high-throughput applications where performance is critical and you trust your modules not to mutate shared data, you can disable cloning:
 
-## 🤝 Contributing
+```javascript
+// High-performance mode (no data cloning)
+const rail = new Rail({ clone: false });
 
-RailJS is in early development. We'd love your feedback:
+// Or toggle it at runtime
+rail.setClone(false); // Disable cloning
+rail.setClone(true);  // Re-enable cloning
+```
 
-1. Try building an app with RailJS
-2. Report issues or confusing parts
-3. Share interesting modules you create
-4. Suggest improvements to the core API
+**Trade-offs:**
+- **With cloning (default)**: Slower, but modules cannot accidentally contaminate each other's data
+- **Without cloning**: Faster, but you must ensure modules don't mutate event data
+
+Use `clone: false` only when:
+- Performance benchmarks show cloning is a bottleneck
+- Your modules treat event data as immutable
+- You're emitting events in tight loops (thousands per second)
+
+## When Not to Use RailJS
+
+- **Simple applications** - Event-driven architecture adds complexity you may not need
+- **Performance-critical real-time systems** - Deep cloning overhead may be too high
+- **Tightly coupled logic** - Some problems are better solved with direct function calls
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Contributing
+
+Contributions welcome! Please read CONTRIBUTING.md for guidelines.
 
 ---
 
-**🚂 Happy building with RailJS!**
-
-_"The first framework designed for AI development"_
-# RailJS
+**Built with clarity and simplicity in mind.**

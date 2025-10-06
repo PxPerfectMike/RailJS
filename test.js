@@ -462,6 +462,194 @@ async function testErrorHandling() {
 	return rail.testResults;
 }
 
+async function testAsyncHandlers() {
+	const rail = new TestRail();
+
+	await rail.runTest('emitAsync waits for all async handlers', async () => {
+		const testRail = new Rail();
+		const results = [];
+
+		testRail.on('test.async', async (data) => {
+			await new Promise(resolve => setTimeout(resolve, 50));
+			results.push('handler1');
+			return 'result1';
+		}, 'module1');
+
+		testRail.on('test.async', async (data) => {
+			await new Promise(resolve => setTimeout(resolve, 30));
+			results.push('handler2');
+			return 'result2';
+		}, 'module2');
+
+		const emitResults = await testRail.emitAsync('test.async', { test: 'data' });
+
+		rail.assertEquals(results.length, 2, 'Both async handlers should execute');
+		rail.assert(results.includes('handler1'), 'Handler 1 should execute');
+		rail.assert(results.includes('handler2'), 'Handler 2 should execute');
+		rail.assertEquals(emitResults.length, 2, 'Should return results from all handlers');
+		rail.assertEquals(emitResults[0].module, 'module1', 'First result should be from module1');
+		rail.assertEquals(emitResults[0].result, 'result1', 'First result should be result1');
+		rail.assertEquals(emitResults[1].module, 'module2', 'Second result should be from module2');
+		rail.assertEquals(emitResults[1].result, 'result2', 'Second result should be result2');
+	});
+
+	await rail.runTest('emitAsync handles errors gracefully', async () => {
+		const testRail = new Rail();
+		let errorEventReceived = false;
+
+		testRail.on('rail.error', () => {
+			errorEventReceived = true;
+		});
+
+		testRail.on('test.async.error', async () => {
+			throw new Error('Handler error');
+		}, 'error-module');
+
+		testRail.on('test.async.error', async () => {
+			return 'success';
+		}, 'good-module');
+
+		const results = await testRail.emitAsync('test.async.error', {});
+
+		rail.assertEquals(results.length, 2, 'Should return results from all handlers');
+		rail.assertEquals(results[0].error, 'Handler error', 'First result should contain error');
+		rail.assertEquals(results[1].result, 'success', 'Second handler should succeed');
+		rail.assert(errorEventReceived, 'Error event should be emitted');
+	});
+
+	await rail.runTest('emitAsync works with synchronous handlers', async () => {
+		const testRail = new Rail();
+
+		testRail.on('test.sync', (data) => {
+			return 'sync-result';
+		}, 'sync-module');
+
+		testRail.on('test.sync', async (data) => {
+			return 'async-result';
+		}, 'async-module');
+
+		const results = await testRail.emitAsync('test.sync', {});
+
+		rail.assertEquals(results.length, 2, 'Should handle both sync and async handlers');
+		rail.assertEquals(results[0].result, 'sync-result', 'Sync handler should return result');
+		rail.assertEquals(results[1].result, 'async-result', 'Async handler should return result');
+	});
+
+	await rail.runTest('emitAsync returns empty array when no listeners', async () => {
+		const testRail = new Rail();
+		const results = await testRail.emitAsync('nonexistent.event', {});
+
+		rail.assertEquals(results.length, 0, 'Should return empty array for no listeners');
+	});
+
+	await rail.runTest('emit still works synchronously with async handlers', () => {
+		const testRail = new Rail();
+		let handlerCalled = false;
+
+		testRail.on('test.sync.emit', async (data) => {
+			handlerCalled = true;
+			return 'async-value';
+		}, 'async-module');
+
+		const count = testRail.emit('test.sync.emit', {});
+
+		rail.assertEquals(count, 1, 'emit should call async handlers synchronously');
+		rail.assert(handlerCalled, 'Async handler should be called (but not awaited)');
+	});
+
+	return rail.testResults;
+}
+
+async function testPerformanceOptions() {
+	const rail = new TestRail();
+
+	await rail.runTest('Cloning can be disabled for performance', () => {
+		const railNoClone = new Rail({ clone: false });
+		const original = { value: 'original', nested: { data: 'test' } };
+		let receivedData = null;
+
+		railNoClone.on('test.noclone', (data) => {
+			receivedData = data;
+			// Modify the data
+			data.value = 'modified';
+			data.nested.data = 'changed';
+		}, 'test-module');
+
+		railNoClone.emit('test.noclone', original);
+
+		// Without cloning, original should be modified
+		rail.assertEquals(
+			original.value,
+			'modified',
+			'Original should be modified when cloning is disabled'
+		);
+		rail.assertEquals(
+			original.nested.data,
+			'changed',
+			'Original nested should be modified when cloning is disabled'
+		);
+		rail.assert(
+			receivedData === original,
+			'Received data should be the same reference as original'
+		);
+	});
+
+	await rail.runTest('Cloning is enabled by default', () => {
+		const railWithClone = new Rail(); // clone: true by default
+		const original = { value: 'original', nested: { data: 'test' } };
+
+		railWithClone.on('test.withclone', (data) => {
+			data.value = 'modified';
+			data.nested.data = 'changed';
+		}, 'test-module');
+
+		railWithClone.emit('test.withclone', original);
+
+		// With cloning (default), original should NOT be modified
+		rail.assertEquals(
+			original.value,
+			'original',
+			'Original should not be modified when cloning is enabled'
+		);
+		rail.assertEquals(
+			original.nested.data,
+			'test',
+			'Original nested should not be modified when cloning is enabled'
+		);
+	});
+
+	await rail.runTest('Cloning can be toggled at runtime', () => {
+		const railToggle = new Rail({ clone: true });
+		let test1Original = { value: 'test1' };
+		let test2Original = { value: 'test2' };
+
+		railToggle.on('test.toggle', (data) => {
+			data.value = 'modified';
+		}, 'test-module');
+
+		// First emit with cloning enabled
+		railToggle.emit('test.toggle', test1Original);
+		rail.assertEquals(
+			test1Original.value,
+			'test1',
+			'Original should not be modified with cloning enabled'
+		);
+
+		// Disable cloning
+		railToggle.setClone(false);
+
+		// Second emit with cloning disabled
+		railToggle.emit('test.toggle', test2Original);
+		rail.assertEquals(
+			test2Original.value,
+			'modified',
+			'Original should be modified with cloning disabled'
+		);
+	});
+
+	return rail.testResults;
+}
+
 async function testUtilityMethods() {
 	const rail = new TestRail();
 
@@ -543,6 +731,8 @@ async function runAllTests() {
 	allResults = allResults.concat(await testDataIsolation());
 	allResults = allResults.concat(await testModuleLifecycle());
 	allResults = allResults.concat(await testErrorHandling());
+	allResults = allResults.concat(await testAsyncHandlers());
+	allResults = allResults.concat(await testPerformanceOptions());
 	allResults = allResults.concat(await testUtilityMethods());
 
 	// Print summary

@@ -1,1 +1,14 @@
-{"type": "module"}
+{
+	"type": "module",
+	"types": "./rail.d.ts",
+	"exports": {
+		".": {
+			"types": "./rail.d.ts",
+			"import": "./rail.js",
+			"require": "./rail.js"
+		}
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	}
+}

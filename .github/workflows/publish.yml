@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
@@ -45,5 +45,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: context.sha,
-              body: '📦 Published to npm: https://www.npmjs.com/package/@railjs/core'
+              body: '📦 Published to npm: https://www.npmjs.com/package/railjs-core'
             })

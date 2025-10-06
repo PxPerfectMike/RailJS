@@ -711,6 +711,26 @@ Async event emission:                725,016 ops/sec
 - Memory efficient: 1000 modules + 1000 events = ~0.3 MB
 - For most applications, the default settings are perfectly fine
 
+## Browser Compatibility
+
+RailJS uses only standard JavaScript features and works in all modern browsers:
+
+| Browser | Minimum Version | Notes |
+|---------|----------------|-------|
+| Chrome | 90+ | Full support |
+| Firefox | 88+ | Full support |
+| Safari | 14+ | Full support |
+| Edge | 90+ | Full support |
+| Node.js | 14.0+ | Full support |
+| Deno | 1.0+ | Full support |
+
+**Requirements:**
+- ES2020 features (Promise, async/await, Map, Set)
+- ES Modules support (or use UMD build for older environments)
+
+**Legacy browsers:**
+Use the UMD build with a transpiler like Babel for IE11 support.
+
 ## When Not to Use RailJS
 
 - **Simple applications** - Event-driven architecture adds complexity you may not need

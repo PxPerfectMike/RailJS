@@ -1,8 +1,10 @@
 # Development files
 *.test.js
+*.test.ts
 test.js
 demo.js
 example.ts
+type-check.test.ts
 vitest.config.js
 tsconfig.json
 benchmark.js

@@ -1,12 +1,51 @@
 {
-	"type": "module",
+	"name": "@railjs/core",
+	"version": "0.1.0",
+	"description": "A lightweight event bus for building modular JavaScript applications with strict module isolation",
+	"main": "./rail.js",
 	"types": "./rail.d.ts",
+	"type": "module",
 	"exports": {
 		".": {
 			"types": "./rail.d.ts",
 			"import": "./rail.js",
 			"require": "./rail.js"
 		}
+	},
+	"files": [
+		"rail.js",
+		"rail.d.ts",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"test": "node test.js",
+		"type-check": "tsc --noEmit"
+	},
+	"keywords": [
+		"event-bus",
+		"event-emitter",
+		"modular",
+		"events",
+		"pub-sub",
+		"event-driven",
+		"module-isolation",
+		"architecture",
+		"typescript",
+		"async"
+	],
+	"author": "PxPerfectMike",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/PxPerfectMike/RailJS.git"
+	},
+	"bugs": {
+		"url": "https://github.com/PxPerfectMike/RailJS/issues"
+	},
+	"homepage": "https://github.com/PxPerfectMike/RailJS#readme",
+	"engines": {
+		"node": ">=14.0.0"
 	},
 	"devDependencies": {
 		"typescript": "^5.9.3"

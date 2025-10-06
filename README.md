@@ -272,22 +272,26 @@ const result = await rail.waitFor('test.output');
 console.log('Module output:', result);
 ```
 
-Run the included test suite:
+### Running Tests
 
 ```bash
-node test.js
+# Run tests with Vitest
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run legacy test suite
+npm run test:legacy
 ```
 
-Expected output:
-
-```
-🧪 Running: Basic event emission and listening
-✅ Passed: Basic event emission and listening
-🧪 Running: Data contamination prevention
-✅ Passed: Data contamination prevention
-...
-🎉 All tests passed!
-```
+**Test Coverage:**
+- 20 comprehensive test cases
+- 81.75% code coverage
+- Tests for cloning, async handlers, module lifecycle, error isolation
 
 ## 🎨 Example: Building a Chat App
 

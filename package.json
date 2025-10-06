@@ -15,12 +15,16 @@
 	"files": [
 		"rail.js",
 		"rail.d.ts",
+		"dist",
 		"README.md",
 		"LICENSE"
 	],
 	"scripts": {
 		"test": "node test.js",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"build": "node build.js",
+		"prebuild": "npm run type-check",
+		"prepublishOnly": "npm run build"
 	},
 	"keywords": [
 		"event-bus",
@@ -48,6 +52,7 @@
 		"node": ">=14.0.0"
 	},
 	"devDependencies": {
+		"esbuild": "^0.25.10",
 		"typescript": "^5.9.3"
 	}
 }

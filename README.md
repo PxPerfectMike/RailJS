@@ -32,9 +32,24 @@ Module C ──┘
 ### Installation
 
 ```bash
-npm install railjs
+npm install @railjs/core
 # or
-yarn add railjs
+yarn add @railjs/core
+```
+
+### CDN Usage (Browser)
+
+```html
+<!-- UMD build (development) -->
+<script src="https://unpkg.com/@railjs/core/dist/rail.umd.js"></script>
+
+<!-- UMD build (production, minified) -->
+<script src="https://unpkg.com/@railjs/core/dist/rail.umd.min.js"></script>
+
+<script>
+  const rail = new RailJS.Rail({ debug: true });
+  // Use rail...
+</script>
 ```
 
 ### TypeScript Support

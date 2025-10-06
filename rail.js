@@ -420,8 +420,3 @@ export class Rail {
 		};
 	}
 }
-
-// For Node.js environments
-if (typeof module !== 'undefined' && module.exports) {
-	module.exports = { Rail };
-}

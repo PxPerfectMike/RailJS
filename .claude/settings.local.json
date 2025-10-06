@@ -14,7 +14,14 @@
       "Bash(npm run benchmark:*)",
       "Bash(npm run test:coverage:*)",
       "Bash(npm pack:*)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(git tag:*)",
+      "Bash(gh release create:*)",
+      "Bash(winget install:*)",
+      "Bash(gh auth:*)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth status)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth login --web)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth login --git-protocol https --web)"
     ],
     "deny": [],
     "ask": []

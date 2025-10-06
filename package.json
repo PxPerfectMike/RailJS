@@ -1,5 +1,5 @@
 {
-	"name": "@railjs/core",
+	"name": "railjs-core",
 	"version": "0.1.0",
 	"description": "A lightweight event bus for building modular JavaScript applications with strict module isolation",
 	"main": "./dist/rail.cjs.js",

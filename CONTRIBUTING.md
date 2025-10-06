@@ -239,18 +239,59 @@ npm run benchmark
 - Add benchmarks for performance-critical changes
 - Document performance characteristics
 
+## Continuous Integration
+
+All pull requests automatically run through our CI pipeline:
+
+### CI Checks
+
+- **Tests**: Run on Node.js 18.x, 20.x, and 22.x
+- **Coverage**: Minimum 80% coverage required
+- **Build**: Verify all distribution formats build correctly
+- **Type Check**: Validate TypeScript definitions
+- **Benchmarks**: Performance regression detection
+- **Security**: CodeQL analysis for vulnerabilities
+
+### Workflow Files
+
+- `.github/workflows/ci.yml`: Main CI pipeline
+- `.github/workflows/publish.yml`: Automated npm publishing on release
+- `.github/workflows/codeql.yml`: Security analysis
+
+### Fixing CI Failures
+
+If CI fails on your PR:
+
+1. Check the error message in the Actions tab
+2. Run the failing command locally (`npm test`, `npm run build`, etc.)
+3. Fix the issue and push the changes
+4. CI will automatically re-run
+
 ## Release Process
 
 (For maintainers)
 
+### Creating a Release
+
 1. Update version in `package.json`
-2. Update `CHANGELOG.md`
+2. Update `CHANGELOG.md` with changes
 3. Run full test suite: `npm test`
-4. Build: `npm run build`
-5. Commit changes
-6. Create git tag: `git tag v0.x.0`
-7. Push tag: `git push origin v0.x.0`
-8. Publish to npm: `npm publish`
+4. Run coverage check: `npm run test:coverage`
+5. Build and verify: `npm run build`
+6. Commit changes: `git commit -am "chore: bump version to v0.x.0"`
+7. Create git tag: `git tag v0.x.0`
+8. Push commits: `git push`
+9. Push tag: `git push origin v0.x.0`
+10. Create GitHub release from the tag
+11. Automated workflow will publish to npm
+
+### Manual Publishing (if needed)
+
+```bash
+npm publish --access public
+```
+
+Note: The CI/CD pipeline automatically publishes to npm when a GitHub release is created.
 
 ## Questions?
 

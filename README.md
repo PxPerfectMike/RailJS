@@ -1,5 +1,9 @@
 # RailJS
 
+[![CI](https://github.com/PxPerfectMike/RailJS/actions/workflows/ci.yml/badge.svg)](https://github.com/PxPerfectMike/RailJS/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/@railjs%2Fcore.svg)](https://www.npmjs.com/package/@railjs/core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A lightweight event bus for building modular JavaScript applications with strict module isolation.
 
 RailJS is a simple, well-tested event emitter that helps you build applications using isolated modules that communicate only through events. Perfect for projects where you want clear boundaries between components without the complexity of a full framework.

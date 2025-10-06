@@ -23,6 +23,7 @@
 		"test": "node test.js",
 		"type-check": "tsc --noEmit",
 		"build": "node build.js",
+		"benchmark": "node benchmark.js",
 		"prebuild": "npm run type-check",
 		"prepublishOnly": "npm run build"
 	},

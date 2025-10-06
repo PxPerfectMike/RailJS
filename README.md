@@ -690,6 +690,23 @@ Use `clone: false` only when:
 - Your modules treat event data as immutable
 - You're emitting events in tight loops (thousands per second)
 
+### Benchmark Results
+
+Run `npm run benchmark` to see performance on your machine. Typical results:
+
+```
+Event emission (with cloning):     2,444,611 ops/sec
+Event emission (without cloning):  3,622,440 ops/sec
+Event with 10 listeners (cloning): 1,077,500 ops/sec
+Async event emission:                725,016 ops/sec
+```
+
+**Key takeaways:**
+- Cloning adds ~30-50% overhead
+- Still handles millions of events per second
+- Memory efficient: 1000 modules + 1000 events = ~0.3 MB
+- For most applications, the default settings are perfectly fine
+
 ## When Not to Use RailJS
 
 - **Simple applications** - Event-driven architecture adds complexity you may not need
